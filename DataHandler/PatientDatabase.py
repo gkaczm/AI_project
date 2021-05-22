@@ -8,9 +8,11 @@ class PatientDatabase:
         # Columns which must not be NaN or the corresponding row will be removed from database
         self.mandatory_columns = ['QRSduration', 'PRinterval', 'Q-Tinterval', 'Tinterval', 'Pinterval',
                                   'J']
-        self.discard_empty()
+        self.prune_database()
 
-    def discard_empty(self):
+
+# prune the database from incomplete data
+    def prune_database(self):
         print("Patient count before pruning : ", len(self.all_patient_data.index))
 
         self.all_patient_data.dropna(subset=self.mandatory_columns,
