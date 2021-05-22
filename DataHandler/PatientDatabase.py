@@ -3,14 +3,13 @@ import pandas as pd
 
 class PatientDatabase:
     def __init__(self, data_path):
-
-
         self.all_patient_data = pd.read_csv(data_path)
 
         # Columns which must not be NaN or the corresponding row will be removed from database
-        # <feels good might delete later> only those columns will be used for classification
+        # TODO Generate using decision tree
         self.mandatory_columns = ['QRSduration', 'PRinterval', 'Q-Tinterval', 'Tinterval', 'Pinterval', 'QRS', 'T', 'P',
                                   'QRST', 'heartrate']
+        self.prune_database_nan()
 
         self.personal_info_column_names = ['age', 'sex', 'height', 'weight']
 
@@ -24,19 +23,15 @@ class PatientDatabase:
         # Dataframe with only the useful ECG results
         self.cardio_data = self.all_patient_data[self.mandatory_columns]
 
-        # Class distribution
-        self.class_names = ["Normal", "Coronary Artery Disease", "Old Anterior Myocardial Infarction",
-                            "Old Inferior Myocardial Infarction", "Sinus tachycardy", "Sinus bradycardy",
-                            "Ventricular Premature Contraction",
-                            "Supraventricular Premature Contraction", "Left bundle branch block", "Right bundle branch block", ]
+        # Arrythmia or not, that answers the question
+        self.classification_table = pd.DataFrame(self.all_patient_data[['class']])
+        self.classification_table.loc[self.classification_table['class'] > 1, 'class'] = 0
+        print(self.classification_table.to_string())
 
-        # lowest and highest value of each column
-        self.min_max = self.all_patient_data.min()
-        print(self.min_max.to_string())
+        # <NOT SURE IF WILL BE NEEDED> lowest and highest value of each column and
+        self.min_values = self.all_patient_data.min()
+        self.max_values = self.all_patient_data.max()
 
-    def prepare_data(self):
-        self.all_patient_data.drop('J', axis='columns', inplace=True)  # Delete the J column cause its almost fully NaN
-        self.prune_database_nan()  # pruning before dividing data into parts
 
     # prune the database from incomplete data
     def prune_database_nan(self):
