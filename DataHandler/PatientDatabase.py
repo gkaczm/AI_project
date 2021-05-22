@@ -1,5 +1,5 @@
 import pandas as pd
-
+from HelperFunctions import *
 
 class PatientDatabase:
     def __init__(self, data_path):
@@ -10,7 +10,7 @@ class PatientDatabase:
         self.mandatory_columns = ['QRSduration', 'PRinterval', 'Q-Tinterval', 'Tinterval', 'Pinterval', 'QRS', 'T', 'P',
                                   'QRST', 'heartrate']
         self.prune_database_nan()
-
+        bootstrap_dataset(self.all_patient_data)
         self.personal_info_column_names = ['age', 'sex', 'height', 'weight']
 
         # define acceptable tolerance(relative) for classification of data f.e. 0.05 means the data will be categorised
