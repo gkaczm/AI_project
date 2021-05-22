@@ -11,11 +11,13 @@ class PatientDatabase:
         self.discard_empty()
 
     def discard_empty(self):
-        print("Patient count before pruning : ", self.all_patient_data.count())
+        print("Patient count before pruning : ", len(self.all_patient_data.index))
+
         self.all_patient_data.dropna(subset=self.mandatory_columns,
                                      inplace=True,
                                      how='any')
-        print("Patient count after pruning : ", self.all_patient_data.count())
+
+        print("Patient count after pruning : ", len(self.all_patient_data.index))
 
     def print_first_n(self, n):
         print(self.all_patient_data.head(n).to_string())
