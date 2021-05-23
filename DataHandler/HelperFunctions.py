@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-def gini_value(yes, no):
+def impurity_value(yes, no):
     yn_sum = yes + no
     p_yes = yes / yn_sum
     p_no = no / yn_sum
