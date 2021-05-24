@@ -1,6 +1,6 @@
 import pandas as pd
 from DataHandler.HelperFunctions import *
-from DataHandler.DecisionTree import DecisionTree
+from DataHandler.TreeNode import TreeNode
 
 
 class PatientDatabase:
@@ -11,7 +11,6 @@ class PatientDatabase:
         # TODO Generate using decision tree
         self.mandatory_columns = ['QRSduration', 'PRinterval', 'Q-Tinterval', 'Tinterval', 'Pinterval', 'QRS', 'T', 'P',
                                   'QRST', 'heartrate', 'J']
-        print(self.all_patient_data.columns.tolist())
         self.prune_database_nan()
         self.personal_info_column_names = ['age', 'sex', 'height', 'weight']
 
@@ -38,6 +37,5 @@ class PatientDatabase:
         print("Patient count after pruning : ", len(self.all_patient_data.index))
 
     def get_best_attributes(self):
-        dt = DecisionTree(self.all_cardio_data)
-        dt.generate_splits()
+        dt = TreeNode(self.all_cardio_data)
         return "placeholder"  # placeholder
