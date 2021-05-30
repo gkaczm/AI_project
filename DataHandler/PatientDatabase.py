@@ -6,6 +6,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
 from sklearn.impute import SimpleImputer
 from sklearn.ensemble import GradientBoostingClassifier
+from sklearn.svm import NuSVC
 
 
 class PatientDatabase:
@@ -33,17 +34,18 @@ class PatientDatabase:
 
                                                                                 random_state=0)
         # Zredukowanie danych X do najważniejszych kolumn, wartoscią poniżej można sie bawić
-        self.importance_cutoff = 0.02
+        self.importance_cutoff = 0.00001
         best_attributes = self.get_best_attributes()
         self.X = self.X[best_attributes]
         self.X_train = self.X_train[best_attributes]
         self.X_test = self.X_test[best_attributes]
 
-        self.classify()
+        self.classify_using_gbc()
+        self.classify_using_rf()
 
     def get_best_attributes(self):
         print("Calculating most meaningful attributes out of :", len(self.X.columns))
-        classifier = RandomForestClassifier(n_estimators=100, random_state=0)
+        classifier = RandomForestClassifier(n_estimators=100)
         classifier.fit(self.X_train, self.y_train)
         feature_imp = pd.Series(classifier.feature_importances_, index=self.X.columns).sort_values(ascending=False)
 
@@ -53,9 +55,16 @@ class PatientDatabase:
         print(best_attributes)
         return best_attributes
 
-    def classify(self):
-        print("\nStarting classification")
-        gb_clf = GradientBoostingClassifier(n_estimators=100, random_state=0)
+    def classify_using_gbc(self):
+        print("\nStarting GBC classification")
+        gb_clf = GradientBoostingClassifier(n_estimators=100)
         gb_clf.fit(self.X_train, self.y_train)
-        print("\n Classification finished with score :")
-        print(gb_clf.score(self.X_test, self.y_test))
+        print("\n GBC classification finished with score :")
+        print(gb_clf.score(self.X_test, self.y_test) * 100, "%")
+
+    def classify_using_rf(self):
+        print("\nStarting Random Forest classification")
+        rf = RandomForestClassifier(n_estimators=100)
+        rf.fit(self.X_train, self.y_train)
+        print("\n Random Forest classification finished with score :")
+        print(rf.score(self.X_test, self.y_test) * 100, "%")
