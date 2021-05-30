@@ -1,17 +1,17 @@
 import pandas as pd
-from DataHandler.HelperFunctions import *
-from DataHandler.TreeNode import TreeNode
+import numpy as np
+import sys
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn import metrics
+from sklearn.impute import SimpleImputer
+from sklearn.ensemble import GradientBoostingClassifier
 
 
 class PatientDatabase:
+
     def __init__(self, data_path):
         self.all_patient_data = pd.read_csv(data_path, skipinitialspace=True)
-
-        # Columns which must not be NaN or the corresponding row will be removed from database
-        # TODO Generate using decision tree
-        self.mandatory_columns = ['QRSduration', 'PRinterval', 'Q-Tinterval', 'Tinterval', 'Pinterval', 'QRS', 'T', 'P',
-                                  'QRST', 'heartrate', 'J']
-        self.prune_database_nan()
         self.personal_info_column_names = ['age', 'sex', 'height', 'weight']
 
         # Dataframe containing age,sex etc. info
@@ -21,21 +21,41 @@ class PatientDatabase:
         self.all_cardio_data = self.all_patient_data.copy().drop(self.personal_info_column_names, axis='columns')
         self.all_cardio_data.loc[self.all_cardio_data['class'] > 1, 'class'] = 0
 
-        # List of leading attributes
-        self.best_attributes = self.get_best_attributes()
-        # Dataframe with only the useful ECG results + bin class
-        self.cardio_data = self.all_patient_data[self.mandatory_columns]
+        self.X = self.all_cardio_data.iloc[:, 0:len(self.all_cardio_data.columns) - 1].values
+        # Zastąpienie nanów wartosciami usrednionymi
+        imp = SimpleImputer(missing_values=np.nan, strategy='mean')
+        self.X = pd.DataFrame(imp.fit_transform(self.X),
+                              columns=self.all_cardio_data.iloc[:, 0:len(self.all_cardio_data.columns) - 1].columns)
 
-    # prune the database from incomplete data
-    def prune_database_nan(self):
-        print("Patient count before pruning : ", len(self.all_patient_data.index))
+        self.y = self.all_cardio_data.iloc[:, len(self.all_cardio_data.columns) - 1].values
 
-        self.all_patient_data.dropna(subset=self.mandatory_columns,
-                                     inplace=True,
-                                     how='any')
+        self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=0.2,
 
-        print("Patient count after pruning : ", len(self.all_patient_data.index))
+                                                                                random_state=0)
+        # Zredukowanie danych X do najważniejszych kolumn, wartoscią poniżej można sie bawić
+        self.importance_cutoff = 0.02
+        best_attributes = self.get_best_attributes()
+        self.X = self.X[best_attributes]
+        self.X_train = self.X_train[best_attributes]
+        self.X_test = self.X_test[best_attributes]
+
+        self.classify()
 
     def get_best_attributes(self):
-        dt = TreeNode(self.all_cardio_data)
-        return "placeholder"  # placeholder
+        print("Calculating most meaningful attributes out of :", len(self.X.columns))
+        classifier = RandomForestClassifier(n_estimators=100, random_state=0)
+        classifier.fit(self.X_train, self.y_train)
+        feature_imp = pd.Series(classifier.feature_importances_, index=self.X.columns).sort_values(ascending=False)
+
+        best_attributes = feature_imp.loc[feature_imp > self.importance_cutoff].index
+        print("Reduced ", len(self.X.columns), " attributes to ", len(best_attributes))
+        print("Printing best attributes :")
+        print(best_attributes)
+        return best_attributes
+
+    def classify(self):
+        print("\nStarting classification")
+        gb_clf = GradientBoostingClassifier(n_estimators=100, random_state=0)
+        gb_clf.fit(self.X_train, self.y_train)
+        print("\n Classification finished with score :")
+        print(gb_clf.score(self.X_test, self.y_test))
