@@ -21,8 +21,9 @@ class PatientDatabase:
         # Dataframe containing all ECG results + binary classification
         self.all_cardio_data = self.all_patient_data.copy().drop(self.personal_info_column_names, axis='columns')
         self.all_cardio_data.loc[self.all_cardio_data['class'] > 1, 'class'] = 0
-
+        print(self.all_cardio_data['class'].value_counts().to_string())
         self.X = self.all_cardio_data.iloc[:, 0:len(self.all_cardio_data.columns) - 1].values
+
         # Zastąpienie nanów wartosciami usrednionymi
         imp = SimpleImputer(missing_values=np.nan, strategy='mean')
         self.X = pd.DataFrame(imp.fit_transform(self.X),
@@ -33,6 +34,7 @@ class PatientDatabase:
         self.X_train, self.X_test, self.y_train, self.y_test = train_test_split(self.X, self.y, test_size=0.2,
 
                                                                                 random_state=0)
+
         # Zredukowanie danych X do najważniejszych kolumn, wartoscią poniżej można sie bawić
         self.importance_cutoff = 0.00001
         best_attributes = self.get_best_attributes()
